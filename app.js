@@ -22,13 +22,127 @@ app.use(cookieparser());
  */
 
 // Routes logic goes here
-app.get('/user', async (req, res) => {
+app.get('/users', async (req, res) => {
     try {
-        const user = await mysqlPool.query("SELECT * FROM user")
+        const user = await mysqlPool.query("SELECT * FROM users")
         res.status(200).send(user)
-    }
-    catch (e) {
+    } catch (e) {
         res.status(400).send({message: "error" + e.message})
     }
 })
+
+// Register
+app.post("/register", async (req, res) => {
+
+    // Our register logic starts here
+    try {
+        // Get user input
+        const {fullName, email, password, birthdate, phone} = req.body;
+
+        // Validate user input
+        if (!(email && password)) {
+            res.status(400).send("email and password is required");
+        }
+
+        // check if user already exist
+        // Validate if user exist in our database
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
+
+        if (userRes[0][0].length > 0) {
+            return res.status(409).send("User Already Exist. Please Login");
+        }
+
+        //Encrypt user password
+        const encryptedPassword = await bcrypt.hash(password, 10);
+
+        // Create user in our database
+        const user = await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
+
+        // Create token
+        // const accessToken = generateAccessToken({user_id: user._id, email: user.email})
+
+        // return new user
+        // user.accessToken = accessToken
+        res.status(201).send(user);
+    } catch (err) {
+        res.status(400).send({message: "error" + err.message})
+        console.log(err);
+    }
+    // Our register logic ends here
+});
+
+
+//Login
+app.post("/login", async (req, res) => {
+
+    // Our login logic starts here
+    try {
+        // Get user input
+        const {email, password} = req.body;
+
+        // Validate user input
+        if (!(email && password)) {
+            res.status(400).send("email and password is required");
+        }
+        // Validate if user exist in our database
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
+
+        if (userRes[0][0]?.password && (await bcrypt.compare(password, userRes[0][0].password))) {
+            // Create token
+            // const accessToken = generateAccessToken({user_id: user._id, email})
+
+            // Creating refresh token not that expiry of refresh
+            //token is greater than the access token
+            // const refreshToken = generateRefreshToken({user_id: user._id, email})
+
+            //push refreshToken to our list refresh token
+            // refreshTokens.push(refreshToken)
+
+            // Assigning refresh token in http-only cookie
+            // res.cookie('jwt', refreshToken, {
+            //     // httpOnly: true,
+            //     httpOnly: false,
+            //     sameSite: 'none',
+            //     secure: true,
+            //     maxAge: 15 * 60 * 1000 // 15min
+            // })
+            // user.accessToken = accessToken
+            return res.status(200).send(userRes[0][0]);
+        }
+        res.status(400).send("Invalid user or password");
+    } catch (err) {
+        res.status(400).send({message: "error" + err.message})
+        console.log(err);
+    }
+});
+// Our login logic ends here
+
+// Log out
+app.post("/logout",
+    // auth,
+    (req, res, next) => {
+        // const refreshToken = req.refreshToken
+        // refreshTokens = refreshTokens.filter(token => token !== refreshToken)
+        // res.clearCookie('jwt', refreshToken, {
+        //     httpOnly: false,
+        //     sameSite: 'none',
+        //     secure: true,
+        // })
+        res.status(200).send({message: "Logged out"})
+    })
+// Our log out logic ends here
+
+app.get('/user',
+    // auth,
+    (req, res) => {
+        // const user = req.user
+        const user = req.body
+        if (!user) {
+            return res.status(401).send({
+                message: 'unauthenticated'
+            });
+        }
+        res.status(200).send(user)
+    })
+
 module.exports = app;
