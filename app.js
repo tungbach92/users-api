@@ -24,7 +24,7 @@ app.use(cookieparser());
 // Routes logic goes here
 app.get('/users', async (req, res) => {
     try {
-        const user = await mysqlPool.query("SELECT * FROM users")
+        const user = await mysqlPool.execute("SELECT * FROM users")
         res.status(200).send(user)
     } catch (e) {
         res.status(400).send({message: "error" + e.message})
