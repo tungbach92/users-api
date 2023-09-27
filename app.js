@@ -48,7 +48,7 @@ app.post("/register", async (req, res) => {
         // Validate if user exist in our database
         const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
 
-        if (userRes[0][0].length > 0) {
+        if (userRes[0].length > 0) {
             return res.status(409).send("User Already Exist. Please Login");
         }
 
