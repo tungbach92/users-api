@@ -56,14 +56,14 @@ app.post("/register", async (req, res) => {
         const encryptedPassword = await bcrypt.hash(password, 10);
 
         // Create user in our database
-        const user = await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
-
+        await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
+        const result = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
         // Create token
         // const accessToken = generateAccessToken({user_id: user._id, email: user.email})
 
         // return new user
         // user.accessToken = accessToken
-        res.status(201).send(user);
+        res.status(201).send(result[0][0]);
     } catch (err) {
         res.status(400).send({message: "error" + err.message})
         console.log(err);
