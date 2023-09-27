@@ -132,17 +132,20 @@ app.post("/logout",
     })
 // Our log out logic ends here
 
+// Get one user
 app.get('/user',
     // auth,
-    (req, res) => {
+    async (req, res) => {
         // const user = req.user
-        const user = req.body
-        if (!user) {
+        const {email, password} = req.body
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
+        if (userRes[0].length === 0 && !userRes[0][0]?.password || !(await bcrypt.compare(password, userRes[0][0].password))) {
             return res.status(401).send({
                 message: 'unauthenticated'
             });
         }
-        res.status(200).send(user)
+        res.status(200).send(userRes[0][0])
     })
+// Our get one user logic ends here
 
 module.exports = app;
