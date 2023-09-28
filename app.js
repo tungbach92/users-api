@@ -136,15 +136,14 @@ app.post("/logout",
 app.get('/user',
     // auth,
     async (req, res) => {
-        // const user = req.user
-        const {email, password} = req.body
-        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
-        if (userRes[0].length === 0 && !userRes[0][0]?.password || !(await bcrypt.compare(password, userRes[0][0].password))) {
+        // TODO: this api need middleware to check received token for authentication and attach user to req
+        const user = req.user
+        if (!user) {
             return res.status(401).send({
                 message: 'unauthenticated'
             });
         }
-        res.status(200).send(userRes[0][0])
+        res.status(200).send(user)
     })
 // Our get one user logic ends here
 
