@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const {sign, verify} = require("jsonwebtoken");
 const cookieparser = require('cookie-parser');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const app = express();
 const cors = require('cors');
 const {mysqlPool} = require("./config/db");
