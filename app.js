@@ -99,14 +99,13 @@ app.post("/login", async (req, res) => {
             // refreshTokens.push(refreshToken)
 
             // Assigning refresh token in http-only cookie
-            // res.cookie('jwt', refreshToken, {
-            //     // httpOnly: true,
-            //     httpOnly: false,
-            //     sameSite: 'none',
-            //     secure: true,
-            //     maxAge: 15 * 60 * 1000 // 15min
-            // })
-            // user.accessToken = accessToken
+            res.cookie('session_id', 'my_session_id', {
+                // httpOnly: true,
+                httpOnly: false,
+                sameSite: 'none',
+                secure: true,
+                maxAge: 15 * 60 * 1000 // 15min
+            })
             return res.status(200).send(userRes[0][0]);
         }
         res.status(400).send("Invalid user or password");
@@ -123,11 +122,11 @@ app.post("/logout",
     (req, res, next) => {
         // const refreshToken = req.refreshToken
         // refreshTokens = refreshTokens.filter(token => token !== refreshToken)
-        // res.clearCookie('jwt', refreshToken, {
-        //     httpOnly: false,
-        //     sameSite: 'none',
-        //     secure: true,
-        // })
+        res.clearCookie('session_id', 'my_session_id', {
+            httpOnly: false,
+            sameSite: 'none',
+            secure: true,
+        })
         res.status(200).send({message: "Logged out"})
     })
 // Our log out logic ends here
@@ -137,13 +136,29 @@ app.get('/user',
     // auth,
     async (req, res) => {
         // TODO: this api need middleware to check received token for authentication and attach user to req
-        const user = req.user
-        if (!user) {
+        const {email} = req.body
+        const sessionId = req.cookies.sessionId
+        const maxAge = new Date(req.cookies.maxAge).getTime()
+        const now = new Date().getTime()
+
+        const isExpired = maxAge <= now
+
+        if (!email || !(sessionId === 'my_session_id') || isExpired) {
             return res.status(401).send({
                 message: 'unauthenticated'
             });
         }
-        res.status(200).send(user)
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
+
+        res.cookie('session_id', 'my_session_id', {
+            // httpOnly: true,
+            httpOnly: false,
+            sameSite: 'none',
+            secure: true,
+            maxAge: 15 * 60 * 1000 // 15min
+        })
+
+        res.status(200).send(userRes[0][0])
     })
 // Our get one user logic ends here
 
