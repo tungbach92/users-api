@@ -143,6 +143,7 @@ app.get('/user',
 
         const isExpired = maxAge <= now
 
+        //TODO: Need logic to verify session id from cookie -> save to Db??
         if (!email || !(sessionId === 'my_session_id') || isExpired) {
             return res.status(401).send({
                 message: 'unauthenticated'
