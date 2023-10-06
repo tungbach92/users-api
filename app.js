@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const app = express();
 const cors = require('cors');
 const {mysqlPool} = require("./config/db");
+const session = require('express-session')
 
 app.use(cors({
     origin: ['http://localhost:3000'], //Chan tat ca cac domain khac ngoai domain nay
@@ -14,6 +15,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieparser());
+app.use(session({
+    secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
+    cookie: {
+        sameSite: 'strict',
+        secure: false
+    }, // Set 'secure' to true if using HTTPS
+}));
 
 // app.use(require('./middlewares/addCustomHeaders'));
 
@@ -58,11 +66,8 @@ app.post("/register", async (req, res) => {
         // Create user in our database
         await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
         const result = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
-        // Create token
-        // const accessToken = generateAccessToken({user_id: user._id, email: user.email})
-
-        // return new user
-        // user.accessToken = accessToken
+        req.session.user = result[0][0]
+        req.session.authorized = true
         res.status(201).send(result[0][0]);
     } catch (err) {
         res.status(400).send({message: "error" + err.message})
@@ -88,24 +93,8 @@ app.post("/login", async (req, res) => {
         const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
 
         if (userRes[0][0]?.password && (await bcrypt.compare(password, userRes[0][0].password))) {
-            // Create token
-            // const accessToken = generateAccessToken({user_id: user._id, email})
-
-            // Creating refresh token not that expiry of refresh
-            //token is greater than the access token
-            // const refreshToken = generateRefreshToken({user_id: user._id, email})
-
-            //push refreshToken to our list refresh token
-            // refreshTokens.push(refreshToken)
-
-            // Assigning refresh token in http-only cookie
-            res.cookie('session_id', 'my_session_id', {
-                // httpOnly: true,
-                httpOnly: false,
-                sameSite: 'none',
-                secure: true,
-                maxAge: 15 * 60 * 1000 // 15min
-            })
+            req.session.user = userRes[0][0]
+            req.session.authorized = true
             return res.status(200).send(userRes[0][0]);
         }
         res.status(400).send("Invalid user or password");
@@ -122,44 +111,21 @@ app.post("/logout",
     (req, res, next) => {
         // const refreshToken = req.refreshToken
         // refreshTokens = refreshTokens.filter(token => token !== refreshToken)
-        res.clearCookie('session_id', 'my_session_id', {
-            httpOnly: false,
-            sameSite: 'none',
-            secure: true,
-        })
+        req.session.destroy()
         res.status(200).send({message: "Logged out"})
     })
 // Our log out logic ends here
 
 // Get one user
-app.get('/user',
+app.get('/onAuthStateChanged',
     // auth,
     async (req, res) => {
-        // TODO: this api need middleware to check received token for authentication and attach user to req
-        const {email} = req.body
-        const sessionId = req.cookies.sessionId
-        const maxAge = new Date(req.cookies.maxAge).getTime()
-        const now = new Date().getTime()
-
-        const isExpired = maxAge <= now
-
-        //TODO: Need logic to verify session id from cookie -> save to Db??
-        if (!email || !(sessionId === 'my_session_id') || isExpired) {
+        if (!req.session?.authorized) {
             return res.status(401).send({
                 message: 'unauthenticated'
             });
         }
-        const userRes = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email]);
-
-        res.cookie('session_id', 'my_session_id', {
-            // httpOnly: true,
-            httpOnly: false,
-            sameSite: 'none',
-            secure: true,
-            maxAge: 15 * 60 * 1000 // 15min
-        })
-
-        res.status(200).send(userRes[0][0])
+        res.status(200).send(req.session.user)
     })
 // Our get one user logic ends here
 
