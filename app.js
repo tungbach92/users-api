@@ -9,6 +9,7 @@ const {mysqlPool} = require("./config/db");
 const session = require('express-session')
 const MemoryStore = require('memorystore')(session)
 const {IS_PRO} = require("./constants/environments");
+const {SESSION_COOKIE_NAME} = require("./constants/constants");
 
 
 console.log(IS_PRO)
@@ -24,17 +25,16 @@ app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
     saveUninitialized: true, // Set to true in a production environment for store cookies
-    store: new MemoryStore({
-        checkPeriod: 86400000 // prune expired entries every 24h
-    }),
-    proxy: true, // Set to true in a production environment for store cookies
-    name: 'movie_search_app',
+    store: IS_PRO ? new MemoryStore({
+        checkPeriod: 43200000 // prune expired entries every 1 day
+    }) : null,
+    proxy: IS_PRO, // Set to true in a production environment for store cookies
+    name: SESSION_COOKIE_NAME, // Set name in a production environment for store cookies
     cookie: {
-        httpOnly: true,
-        maxAge: 86400000,
-        sameSite: 'none', // Set to none in a production environment for store cookies
+        maxAge: 43200000, // expired in 1 day
+        sameSite: IS_PRO ? 'none' : 'strict', // Set to none in a production environment for store cookies
         secure: IS_PRO, // Set to true in a production environment with HTTPS
-    }, // Set 'secure' to true if using HTTPS
+    },
 }));
 
 // app.use(require('./middlewares/addCustomHeaders'));
@@ -115,7 +115,6 @@ app.post("/login", async (req, res) => {
                     console.error("Error saving session:", err);
                 }
             });
-            console.log(userRes[0][0])
             return res.status(200).send(userRes[0][0]);
         }
         res.status(400).send("Invalid user or password");
@@ -146,6 +145,7 @@ app.get('/onAuthStateChanged',
                 message: 'unauthenticated'
             });
         }
+
         res.status(200).send(req.session.user)
     })
 // Our get one user logic ends here
