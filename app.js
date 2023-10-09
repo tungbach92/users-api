@@ -46,7 +46,7 @@ app.post("/register", async (req, res) => {
     // Our register logic starts here
     try {
         // Get user input
-        const {fullName, email, password, birthdate, phoneNumber} = req.body;
+        const {fullName, email, password, birthdate, phone} = req.body;
 
         // Validate user input
         if (!(email && password)) {
@@ -65,7 +65,7 @@ app.post("/register", async (req, res) => {
         const encryptedPassword = await bcrypt.hash(password, 10);
 
         // Create user in our database
-        await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phoneNumber])
+        await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
         const result = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
         req.session.user = result[0][0]
         req.session.authorized = true
