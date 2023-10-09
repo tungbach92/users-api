@@ -7,13 +7,15 @@ const app = express();
 const cors = require('cors');
 const {mysqlPool} = require("./config/db");
 const session = require('express-session')
+const MemoryStore = require('memorystore')(session)
 const {IS_PRO} = require("./constants/environments");
 
 
 console.log(IS_PRO)
 app.use(cors({
     origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
-    credentials: true //Để bật cookie HTTP qua CORS
+    credentials: true, //Để bật cookie HTTP qua CORS,,
+    sameSite: 'none'
 }))
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
@@ -22,6 +24,9 @@ app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
     saveUninitialized: true, // Set to true in a production environment for store cookies
+    store: new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+    }),
     cookie: {
         sameSite: 'none', // Set to none in a production environment for store cookies
         secure: IS_PRO, // Set to true in a production environment with HTTPS
