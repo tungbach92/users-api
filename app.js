@@ -18,7 +18,7 @@ app.use(cookieparser());
 app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
         secure: false, // Set to true in a production environment with HTTPS
     }, // Set 'secure' to true if using HTTPS
@@ -125,7 +125,7 @@ app.post("/logout",
 // Get one user
 app.get('/onAuthStateChanged',
     // auth,
-    async (req, res) => {
+    (req, res) => {
         if (!req.session?.authorized) {
             return res.status(401).send({
                 message: 'unauthenticated'
@@ -134,5 +134,4 @@ app.get('/onAuthStateChanged',
         res.status(200).send(req.session.user)
     })
 // Our get one user logic ends here
-
 module.exports = app;
