@@ -15,11 +15,11 @@ console.log(IS_PRO)
 app.use(cors({
     origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
     credentials: true, //Để bật cookie HTTP qua CORS,,
-    sameSite: 'none'
 }))
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieparser());
+app.set('trust proxy', 1)
 app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
@@ -27,7 +27,11 @@ app.use(session({
     store: new MemoryStore({
         checkPeriod: 86400000 // prune expired entries every 24h
     }),
+    proxy: true, // Set to true in a production environment for store cookies
+    name: 'movie_search_app',
     cookie: {
+        httpOnly: true,
+        maxAge: 86400000,
         sameSite: 'none', // Set to none in a production environment for store cookies
         secure: IS_PRO, // Set to true in a production environment with HTTPS
     }, // Set 'secure' to true if using HTTPS
