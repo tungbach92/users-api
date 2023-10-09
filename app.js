@@ -7,9 +7,10 @@ const app = express();
 const cors = require('cors');
 const {mysqlPool} = require("./config/db");
 const session = require('express-session')
+const {IS_PRO} = require("./constants/environments");
 
 app.use(cors({
-    origin: ['http://localhost:3000'], //Chan tat ca cac domain khac ngoai domain nay
+    origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
     credentials: true //Để bật cookie HTTP qua CORS
 }))
 app.use(express.json());
@@ -20,9 +21,10 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: false, // Set to true in a production environment with HTTPS
+        secure: IS_PRO, // Set to true in a production environment with HTTPS
     }, // Set 'secure' to true if using HTTPS
 }));
+
 
 // app.use(require('./middlewares/addCustomHeaders'));
 
@@ -69,6 +71,7 @@ app.post("/register", async (req, res) => {
         const result = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
         req.session.user = result[0][0]
         req.session.authorized = true
+        console.log(result[0][0])
         res.status(201).send(result[0][0]);
     } catch (err) {
         res.status(400).send({message: "error" + err.message})
@@ -101,6 +104,7 @@ app.post("/login", async (req, res) => {
                     console.error("Error saving session:", err);
                 }
             });
+            console.log(userRes[0][0])
             return res.status(200).send(userRes[0][0]);
         }
         res.status(400).send("Invalid user or password");
