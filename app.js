@@ -9,6 +9,8 @@ const {mysqlPool} = require("./config/db");
 const session = require('express-session')
 const {IS_PRO} = require("./constants/environments");
 
+
+console.log(IS_PRO)
 app.use(cors({
     origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
     credentials: true //Để bật cookie HTTP qua CORS
@@ -19,12 +21,12 @@ app.use(cookieparser());
 app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: true, // Set to true in a production environment for store cookies
     cookie: {
+        sameSite: 'none', // Set to none in a production environment for store cookies
         secure: IS_PRO, // Set to true in a production environment with HTTPS
     }, // Set 'secure' to true if using HTTPS
 }));
-
 
 // app.use(require('./middlewares/addCustomHeaders'));
 
