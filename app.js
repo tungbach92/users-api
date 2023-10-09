@@ -17,9 +17,10 @@ app.use(express.urlencoded({extended: false}));
 app.use(cookieparser());
 app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        sameSite: 'strict',
-        secure: false
+        secure: false, // Set to true in a production environment with HTTPS
     }, // Set 'secure' to true if using HTTPS
 }));
 
@@ -45,7 +46,7 @@ app.post("/register", async (req, res) => {
     // Our register logic starts here
     try {
         // Get user input
-        const {fullName, email, password, birthdate, phone} = req.body;
+        const {fullName, email, password, birthdate, phoneNumber} = req.body;
 
         // Validate user input
         if (!(email && password)) {
@@ -64,7 +65,7 @@ app.post("/register", async (req, res) => {
         const encryptedPassword = await bcrypt.hash(password, 10);
 
         // Create user in our database
-        await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phone])
+        await mysqlPool.query("INSERT INTO users (email, password, fullName, birthdate, phone) VALUES(?, ?, ?, ?, ?)", [email, encryptedPassword, fullName, birthdate, phoneNumber])
         const result = await mysqlPool.query("SELECT * FROM users WHERE email=?", [email])
         req.session.user = result[0][0]
         req.session.authorized = true
@@ -95,6 +96,11 @@ app.post("/login", async (req, res) => {
         if (userRes[0][0]?.password && (await bcrypt.compare(password, userRes[0][0].password))) {
             req.session.user = userRes[0][0]
             req.session.authorized = true
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Error saving session:", err);
+                }
+            });
             return res.status(200).send(userRes[0][0]);
         }
         res.status(400).send("Invalid user or password");
