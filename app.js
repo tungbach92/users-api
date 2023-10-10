@@ -125,6 +125,23 @@ app.post("/login", async (req, res) => {
 });
 // Our login logic ends here
 
+//Update
+app.post("/update/:id", async (req, res) => {
+
+    try {
+        // Get user input
+        const id = req.params.id
+        const {fullName, email, birthdate, phone} = req.body;
+
+        // Create user in our database
+        await mysqlPool.query("UPDATE users SET email = ?, fullName = ?, birthdate = ?, phone = ? WHERE id = ?", [email, fullName, birthdate, phone, id])
+        res.status(201).send("Updated");
+    } catch (err) {
+        res.status(400).send({message: "error" + err.message})
+        console.log(err);
+    }
+});
+
 // Log out
 app.post("/logout",
     // auth,
