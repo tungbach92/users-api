@@ -132,9 +132,16 @@ app.post("/update/:id", async (req, res) => {
         // Get user input
         const id = req.params.id
         const {fullName, email, birthdate, phone, gender} = req.body;
-
+        if (!req.session?.authorized) {
+            return res.status(401).send({
+                message: 'unauthenticated'
+            });
+        }
         // Create user in our database
         await mysqlPool.query("UPDATE users SET email = ?, fullName = ?, birthdate = ?, phone = ?, gender = ? WHERE id = ?", [email, fullName, birthdate, phone, gender, id])
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE id=?", [id]);
+
+        req.session.user = userRes[0][0]
         res.status(201).send("Updated");
     } catch (err) {
         res.status(400).send({message: "error" + err.message})
