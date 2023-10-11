@@ -12,7 +12,7 @@ const {IS_PRO} = require("./constants/environments");
 const {SESSION_COOKIE_NAME} = require("./constants/constants");
 
 
-console.log(IS_PRO)
+console.log('Product environment', IS_PRO)
 app.use(cors({
     origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
     credentials: true, //Để bật cookie HTTP qua CORS,,
@@ -131,18 +131,28 @@ app.post("/update/:id", async (req, res) => {
     try {
         // Get user input
         const id = req.params.id
-        const {fullName, email, birthdate, phone, gender, imageUrl} = req.body;
+        const {fullName, email, birthdate, phone, gender, imageUrl, password} = req.body;
         if (!req.session?.authorized) {
             return res.status(401).send({
                 message: 'unauthenticated'
             });
         }
-        // Create user in our database
-        await mysqlPool.query("UPDATE users SET email = ?, fullName = ?, birthdate = ?, phone = ?, gender = ?, imageUrl = ? WHERE id = ?", [email, fullName, birthdate, phone, gender, imageUrl, id])
-        const userRes = await mysqlPool.query("SELECT * FROM users WHERE id=?", [id]);
+        if (password) {
+            const encryptedPassword = await bcrypt.hash(password, 10);
+            await mysqlPool.query("UPDATE users SET password = ? WHERE user_id = ?", [encryptedPassword, id])
+        }
 
+        if (email) {
+            await mysqlPool.query("UPDATE users SET email = ? WHERE user_id = ?", [id])
+        }
+
+        if (!email && !password) {
+            await mysqlPool.query("UPDATE users SET fullName = ?, birthdate = ?, phone = ?, gender = ?, imageUrl = ? WHERE user_id = ?", [fullName, birthdate, phone, gender, imageUrl, id])
+        }
+
+        const userRes = await mysqlPool.query("SELECT * FROM users WHERE user_id=?", [id]);
         req.session.user = userRes[0][0]
-        res.status(201).send("Updated");
+        res.status(201).send(userRes[0][0]);
     } catch (err) {
         res.status(400).send({message: "error" + err.message})
         console.log(err);

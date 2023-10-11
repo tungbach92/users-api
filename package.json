@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "env-cmd -f .env nodemon index.js",
-    "start:stg": "env-cmd -f .env.stg node index.js",
+    "start:stg": "env-cmd -f .env.stg nodemon index.js",
     "start:prod": "env-cmd -f .env.production node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
