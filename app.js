@@ -143,11 +143,7 @@ app.post("/update/:id", async (req, res) => {
         }
 
         if (email) {
-            await mysqlPool.query("UPDATE users SET email = ? WHERE user_id = ?", [id])
-        }
-
-        if (!email && !password) {
-            await mysqlPool.query("UPDATE users SET fullName = ?, birthdate = ?, phone = ?, gender = ?, imageUrl = ? WHERE user_id = ?", [fullName, birthdate, phone, gender, imageUrl, id])
+            await mysqlPool.query("UPDATE users SET email = ?, fullName = ?, birthdate = ?, phone = ?, gender = ?, imageUrl = ? WHERE user_id = ?", [email, fullName, birthdate, phone, gender, imageUrl, id])
         }
 
         const userRes = await mysqlPool.query("SELECT * FROM users WHERE user_id=?", [id]);
