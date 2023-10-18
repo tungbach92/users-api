@@ -179,4 +179,10 @@ app.get('/onAuthStateChanged',
         res.status(200).send(req.session.user)
     })
 // Our get one user logic ends here
+
+// check server response
+app.get('/', (req, res) => {
+    res.status(200).send("OK")
+})
+
 module.exports = app;
