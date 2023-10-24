@@ -14,7 +14,7 @@ const {SESSION_COOKIE_NAME} = require("./constants/constants");
 
 console.log('Product environment', IS_PRO)
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com'], //Chan tat ca cac domain khac ngoai domain nay
+    origin: ['http://localhost:3000', 'https://bach-users-api.onrender.com', 'https://movie-search-app-e6581.web.app'], //Chan tat ca cac domain khac ngoai domain nay
     credentials: true, //Để bật cookie HTTP qua CORS,,
 }))
 app.use(express.json());
