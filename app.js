@@ -20,7 +20,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieparser());
-app.set('trust proxy', 1)
+app.set('trust proxy', 1) // set trust first proxy when using cookie secure true ? (https://www.npmjs.com/package/express-session)
 app.use(session({
     secret: process.env.SESSION_SECRET, // Change this to a long and secure secret key
     resave: false,
@@ -30,7 +30,7 @@ app.use(session({
     }) : null,
     proxy: IS_PRO, // Set to true in a production environment for store cookies
     name: SESSION_COOKIE_NAME, // Set name in a production environment for store cookies
-    cookie: {
+    cookie: { // httpOnly is true by default
         maxAge: 43200000, // expired in 1 day
         sameSite: IS_PRO ? 'none' : 'strict', // Set to none in a production environment for store cookies
         secure: IS_PRO, // Set to true in a production environment with HTTPS
